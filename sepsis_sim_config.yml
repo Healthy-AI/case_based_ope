@@ -1,0 +1,120 @@
+n_train_samples: 1000
+n_train_sa_pairs: 20000
+
+n_valid_samples: 1000
+n_valid_sa_pairs: 20000
+
+n_test_samples: 1000
+n_test_sa_pairs: 200000
+
+n_true_samples: 1000
+
+min_n_steps: 5  # Min trajectory length
+max_n_steps: 30  # Max trajectory length
+
+state_idx_type: 'full'  # For the RL policy
+
+discount_pol: 0.99  # For learning optimal policies (\mu and \pi)
+discount: 1  # For computing actual reward
+mu_epsilon: 0.05
+pi_epsilon: 0.01
+
+p_diabetes: 0.2
+
+n_iterations: 100
+n_bootstrap: 1
+
+w_ratio_th: 1.0e+3
+
+# Results
+results:
+  path: '/Users/antmats/code/case_based_ope/results/sepsis_sim/'
+
+# Data
+data:
+  mdp_params_path: '/Users/antmats/code/case_based_ope/data/sepsis_sim/diab_txr_mats-replication.pkl'
+
+# Default neural network parameters
+default:
+  projection_interval: 5
+  module:
+    type: case_based_ope.models.prototypes.PrototypeNetwork
+    is_called: False
+  criterion:
+    type: torch.nn.CrossEntropyLoss
+    is_called: False
+  optimizer:
+    type: torch.optim.Adam
+    is_called: False
+    lr: 1.0e-3
+    weight_decay: 1.0e-3
+  #lr: 1e-3
+  max_epochs: 5
+  batch_size: 128
+  iterator_train:
+    type: torch.utils.data.DataLoader
+    is_called: False
+  iterator_valid:
+    type: torch.utils.data.DataLoader
+    is_called: False
+  dataset:
+    type: case_based_ope.utils.data.StandardDataset
+    is_called: False
+  train_split: False
+  callbacks: null
+  predict_nonlinearity: 'auto'
+  warm_start: False
+  verbose: 0
+  device: 'cpu'
+
+# Feedforward neural network baseline
+mlp:
+  estimator_kwargs:
+    projection_interval: -1
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.NNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__hidden_sizes:
+        - 64
+      encoder__output_size: 64
+      n_prototypes: -1
+      #output_size: output_size
+  param_grid: &mlp_param_grid {}
+  search_kwargs:
+    param_grid: *mlp_param_grid
+
+# ProNet
+pronet:
+  estimator_kwargs:
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.NNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__hidden_sizes:
+        - 64
+      encoder__output_size: 64
+      n_prototypes: 10
+      #output_size: output_size
+  param_grid:
+    estimator__d_min:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+    estimator__lambda_div:
+      - 1.0e-5
+      - 1.0e-4
+      - 1.0e-3
+      - 1.0e-2
+      - 1.0e-1
+    estimator__module__n_prototypes:
+      - 10
+      - 100

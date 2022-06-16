@@ -1,0 +1,240 @@
+# Model training
+n_inits: 5
+
+# Model evaluation
+n_scoring_bootstraps: 1000
+
+# Policy evaluation
+discount: 1
+n_is_bootstraps: 100
+pi_until: 1
+weight_threshold: 100
+
+# Results
+results:
+  path: 'results/sepsis/'
+
+# AI Clinician
+ai_clinician:
+  path: 'results/sepsis/ai_clinician/20210429_1512/'
+
+# Data
+data:
+  path: 'data/sepsis/processed/sepsis_data.csv'
+  seed: 0
+  valid_size: 0.2
+  test_size: 0.2
+  use_aic_split: True
+
+# Logistic regression baseline
+lr:
+  estimator_kwargs:
+    solver: 'saga'
+    max_iter: 1000
+  param_grid: &lr_param_grid
+    estimator__penalty:
+      - 'l1'
+      - 'l2'
+    estimator__C:
+      - 1.00000000e-4
+      - 7.74263683e-4
+      - 5.99484250e-3
+      - 4.64158883e-2
+      - 3.59381366e-1
+      - 2.78255940e+0
+      - 2.15443469e+1
+      - 1.66810054e+2
+      - 1.29154967e+3
+      - 1.00000000e+4
+  search_kwargs:
+    param_grid: *lr_param_grid
+    scoring: 'neg_log_loss'
+    n_jobs: -1
+    cv: 3
+
+# Random forest baseline
+rf:
+  estimator_kwargs: {}
+  param_grid: &rf_param_grid
+    estimator__max_depth:
+      - 5
+      - 10
+      - 15
+      - 20
+      - null
+  search_kwargs:
+    param_grid: *rf_param_grid
+    scoring: 'neg_log_loss'
+    n_jobs: -1
+    cv: 3
+
+# Default neural network parameters
+default:
+  projection_interval: 5
+  module:
+    type: case_based_ope.models.prototypes.PrototypeNetwork
+    is_called: False
+  criterion:
+    type: torch.nn.CrossEntropyLoss
+    is_called: False
+  optimizer:
+    type: torch.optim.Adam
+    is_called: False
+    lr: 1.0e-3
+    weight_decay: 1.0e-3
+  #lr: 1e-3
+  max_epochs: 400
+  batch_size: 64
+  iterator_train:
+    type: torch.utils.data.DataLoader
+    is_called: False
+  iterator_valid:
+    type: torch.utils.data.DataLoader
+    is_called: False
+  dataset:
+    type: case_based_ope.utils.data.StandardDataset
+    is_called: False
+  train_split: False
+  callbacks: null
+  predict_nonlinearity: 'auto'
+  warm_start: False
+  verbose: 0
+  device: 'cpu'
+
+# Feedforward neural network baseline
+mlp:
+  estimator_kwargs:
+    projection_interval: -1
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.NNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__hidden_sizes:
+        - 64
+      encoder__output_size: 64
+      n_prototypes: -1
+      #output_size: output_size
+    batch_size: 1024
+  param_grid: &mlp_param_grid {}
+  search_kwargs:
+    param_grid: *mlp_param_grid
+
+# Feedforward recurrent network baseline
+rnn:
+  estimator_kwargs: 
+    projection_interval: -1
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.RNNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__n_layers: 2
+      encoder__output_size: 64
+      n_prototypes: -1
+      #output_size: output_size
+    iterator_train:
+      type: torch.utils.data.DataLoader
+      is_called: False
+      collate_fn:
+        type: case_based_ope.utils.data.pad_pack_sequences
+        is_called: False
+    iterator_valid:
+      type: torch.utils.data.DataLoader
+      is_called: False
+      collate_fn:
+        type: case_based_ope.utils.data.pad_pack_sequences
+        is_called: False
+    dataset:
+      type: case_based_ope.utils.data.SequentialDataset
+      is_called: False
+    batch_size: 64
+  param_grid: &rnn_param_grid {}
+  search_kwargs:
+    param_grid: *rnn_param_grid
+
+# ProNet
+pronet:
+  estimator_kwargs:
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.NNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__hidden_sizes:
+        - 64
+      encoder__output_size: 64
+      n_prototypes: 10
+      #output_size: output_size
+    batch_size: 1024
+  param_grid:
+    estimator__d_min:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+    estimator__lambda_div:
+      - 1.0e-5
+      - 1.0e-4
+      - 1.0e-3
+      - 1.0e-2
+      - 1.0e-1
+    estimator__module__n_prototypes:
+      - 10
+      - 50
+      - 100
+
+# ProSeNet
+prosenet:
+  estimator_kwargs:
+    module:
+      type: case_based_ope.models.prototypes.PrototypeNetwork
+      is_called: False
+      encoder:
+        type: case_based_ope.models.prototypes.RNNEncoder
+        is_called: False
+      #encoder__input_size: input_size
+      encoder__n_layers: 2
+      encoder__output_size: 64
+      n_prototypes: 10
+      #output_size: output_size
+    iterator_train:
+      type: torch.utils.data.DataLoader
+      is_called: False
+      collate_fn:
+        type: case_based_ope.utils.data.pad_pack_sequences
+        is_called: False
+    iterator_valid:
+      type: torch.utils.data.DataLoader
+      is_called: False
+      collate_fn:
+        type: case_based_ope.utils.data.pad_pack_sequences
+        is_called: False
+    dataset:
+      type: case_based_ope.utils.data.SequentialDataset
+      is_called: False
+    batch_size: 64
+  param_grid:
+    estimator__d_min:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+    estimator__lambda_div:
+      - 1.0e-5
+      - 1.0e-4
+      - 1.0e-3
+      - 1.0e-2
+      - 1.0e-1
+    estimator__module__n_prototypes:
+      - 10
+      - 50
+      - 100
