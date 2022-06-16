@@ -1,6 +1,6 @@
 import numpy as np
-from .State import State
-from .Action import Action
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.State import State
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.Action import Action
 
 '''
 Includes blood glucose level proxy for diabetes: 0-3

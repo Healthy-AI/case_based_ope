@@ -2,9 +2,10 @@
 counterfactual
 """
 import numpy as np
-import mdptoolboxSrc.mdp as mdptools
+import mdptoolbox.mdp as mdptools
+#import mdptoolboxSrc.mdp as mdptools
 import warnings
-import cf.gumbelTools as gt
+import case_based_ope.sepsis_sim.gumbel_max_scm.cf.gumbelTools as gt
 from tqdm import tqdm_notebook as tqdm
 
 class MatrixMDP(object):
@@ -141,16 +142,22 @@ class MatrixMDP(object):
 
         # Run Policy Iteration
         pi = mdptools.PolicyIteration(
-            tx_mat_obs, r_mat_obs, discount=discount, skip_check=skip_check,
+            tx_mat_obs, r_mat_obs, discount=discount, #skip_check=skip_check,
             policy0=obs_pol, eval_type=eval_type)
         pi.setSilent()
         pi.run()
+
+        # Compute Q matrix
+        Q = np.zeros((pi.S, pi.A))
+        for s in range(pi.S):
+            for a in range(pi.A):
+                Q[s, a] = pi.R[a][s] + pi.discount * pi.P[a][s, :].dot(pi.V)
 
         # Convert this (deterministic) policy pi into a matrix format 
         pol_opt = np.zeros((self.n_states, self.n_actions))
         pol_opt[np.arange(len(pi.policy)), pi.policy] = 1
 
-        return pol_opt
+        return pol_opt, Q
 
 class BatchSampler(object):
     """BatchSampler
@@ -539,5 +546,5 @@ def eval_wis(obs_samps, obs_policy, new_policy,
             import pdb
             pdb.set_trace()
 
-        wis_est = wis.mean()
+        wis_est = [wis.mean()]
         return wis_est, wis_idx, wis_idx.sum()

@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-from sepsisSimDiabetes.State import State
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.State import State
 
-import matplotlib.pyplot as plt
-import seaborn as sns
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 import warnings
-from matplotlib.ticker import FormatStrFormatter
+#from matplotlib.ticker import FormatStrFormatter
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def format_dgen_samps(states, actions, rewards, hidden, NSTEPS, NSIMSAMPS):
@@ -112,6 +112,10 @@ def plot_trajectory(samps, pt_idx=0, cf=False, cf_samps=None, cf_proj=False,
     :param max_plt_len: Maximum length to plot
     :param force_length: Force length to a certain length
     """
+
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import FormatStrFormatter
+
     this_df, outcome = df_from_samps(samps, pt_idx, get_outcome=True)
 
     eps = 0.5

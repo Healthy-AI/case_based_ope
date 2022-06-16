@@ -1,7 +1,7 @@
 import numpy as np, random
-from .MDP import MDP
-from .State import State
-from .Action import Action
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.MDP import MDP
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.State import State
+from case_based_ope.sepsis_sim.gumbel_max_scm.sepsisSimDiabetes.Action import Action
 from tqdm import tqdm_notebook as tqdm
 
 '''
