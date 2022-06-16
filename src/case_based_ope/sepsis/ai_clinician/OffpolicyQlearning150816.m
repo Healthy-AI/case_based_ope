@@ -4,7 +4,7 @@ function [ Q, sumQ] = OffpolicyQlearning150816( qldata3 , gamma, alpha, numtrace
 %initialisation of variables
 sumQ=zeros(numtraces,1);  %record sum of Q after each iteration
 nact=numel(unique(qldata3(:,3)))-1;   %nr of actions
-ncl=numel(unique(qldata3(:,2)));
+ncl=750; %numel(unique(qldata3(:,2)));
 Q=zeros (ncl, nact);  
 maxavgQ=1;
 modu=100;

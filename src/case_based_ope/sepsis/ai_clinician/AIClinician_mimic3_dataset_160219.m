@@ -358,9 +358,9 @@ reformat=SAH(reformat(:,1:68),sample_and_hold);
 %                             DATA COMBINATION
 % ########################################################################
 
-tic
-     save('D:\BACKUP MIT PC\Data_100219.mat', '-v7.3');
-toc
+%tic
+%     save('D:\BACKUP MIT PC\Data_100219.mat', '-v7.3');
+%toc
 
 
 % WARNING: the time window of interest has been defined above (here -48 -> +24)! 
@@ -514,9 +514,9 @@ reformat2(irow:end,:)=[];
 close(h);
 
 
-tic
-     save('D:\BACKUP MIT PC\Data_110219.mat', '-v7.3');
-toc
+%tic
+%     save('D:\BACKUP MIT PC\Data_110219.mat', '-v7.3');
+%toc
 
 %% ########################################################################
 %             CONVERT TO TABLE AND KEEP ONLY WANTED VARIABLE

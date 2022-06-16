@@ -30,31 +30,31 @@
 %% ########################################################################
 % IMPORT ALL DATA
 
-tic
-abx=table2array(readtable('D:/exportdir/abx.csv'));
-culture=table2array(readtable('D:/exportdir/culture.csv'));
-microbio=table2array(readtable('D:/exportdir/microbio.csv'));
-demog=(readtable('D:/exportdir/demog.csv'));
-ce010=table2array(readtable('D:/exportdir/ce010000.csv'));
-ce1020=table2array(readtable('D:/exportdir/ce1000020000.csv'));
-ce2030=table2array(readtable('D:/exportdir/ce2000030000.csv'));
-ce3040=table2array(readtable('D:/exportdir/ce3000040000.csv'));
-ce4050=table2array(readtable('D:/exportdir/ce4000050000.csv'));
-ce5060=table2array(readtable('D:/exportdir/ce5000060000.csv'));
-ce6070=table2array(readtable('D:/exportdir/ce6000070000.csv'));
-ce7080=table2array(readtable('D:/exportdir/ce7000080000.csv'));
-ce8090=table2array(readtable('D:/exportdir/ce8000090000.csv'));
-ce90100=table2array(readtable('D:/exportdir/ce90000100000.csv'));
-labU=[ table2array(readtable('D:/exportdir/labs_ce.csv')) ; table2array(readtable('D:/exportdir/labs_le.csv'))  ];
-MV=table2array(readtable('D:/exportdir/mechvent.csv'));
-inputpreadm=table2array(readtable('D:/exportdir/preadm_fluid.csv'));
-inputMV=table2array(readtable('D:/exportdir/fluid_mv.csv'));
-inputCV=table2array(readtable('D:/exportdir/fluid_cv.csv'));
-vasoMV=table2array(readtable('D:/exportdir/vaso_mv.csv'));
-vasoCV=table2array(readtable('D:/exportdir/vaso_cv.csv'));
-UOpreadm=table2array(readtable('D:/exportdir/preadm_uo.csv'));
-UO=table2array(readtable('D:/exportdir/uo.csv'));
-toc
+%tic
+%abx=table2array(readtable('D:/exportdir/abx.csv'));
+%culture=table2array(readtable('D:/exportdir/culture.csv'));
+%microbio=table2array(readtable('D:/exportdir/microbio.csv'));
+%demog=(readtable('D:/exportdir/demog.csv'));
+%ce010=table2array(readtable('D:/exportdir/ce010000.csv'));
+%ce1020=table2array(readtable('D:/exportdir/ce1000020000.csv'));
+%ce2030=table2array(readtable('D:/exportdir/ce2000030000.csv'));
+%ce3040=table2array(readtable('D:/exportdir/ce3000040000.csv'));
+%ce4050=table2array(readtable('D:/exportdir/ce4000050000.csv'));
+%ce5060=table2array(readtable('D:/exportdir/ce5000060000.csv'));
+%ce6070=table2array(readtable('D:/exportdir/ce6000070000.csv'));
+%ce7080=table2array(readtable('D:/exportdir/ce7000080000.csv'));
+%ce8090=table2array(readtable('D:/exportdir/ce8000090000.csv'));
+%ce90100=table2array(readtable('D:/exportdir/ce90000100000.csv'));
+%labU=[ table2array(readtable('D:/exportdir/labs_ce.csv')) ; table2array(readtable('D:/exportdir/labs_le.csv'))  ];
+%MV=table2array(readtable('D:/exportdir/mechvent.csv'));
+%inputpreadm=table2array(readtable('D:/exportdir/preadm_fluid.csv'));
+%inputMV=table2array(readtable('D:/exportdir/fluid_mv.csv'));
+%inputCV=table2array(readtable('D:/exportdir/fluid_cv.csv'));
+%vasoMV=table2array(readtable('D:/exportdir/vaso_mv.csv'));
+%vasoCV=table2array(readtable('D:/exportdir/vaso_cv.csv'));
+%UOpreadm=table2array(readtable('D:/exportdir/preadm_uo.csv'));
+%UO=table2array(readtable('D:/exportdir/uo.csv'));
+%toc
 
 %% ########################################################################
 %                       INITIAL DATA MANIPULATIONS
@@ -79,6 +79,7 @@ demog.elixhauser(isnan(demog.elixhauser))=0;
 inputMV(:,8)=inputMV(:,7).*inputMV(:,6)./inputMV(:,5);
 
 % fill-in missing ICUSTAY IDs in bacterio
+tic
 for i=1:size(bacterio,1)
 if bacterio(i,3)==0   %if missing icustayid
     o=bacterio(i,4);  %charttime
@@ -136,6 +137,7 @@ end
 
 onset=zeros(100000,3);
 
+tic
 for icustayid=1:100000
 
     ab=abx(abx(:,2)==icustayid+200000,3);   %start time of abx for this icustayid
@@ -968,4 +970,4 @@ sepsis(sepsis.max_sofa<2,:)=[];
 size(sepsis,1)  
 
 %save cohort
-writetable(sepsis,'sepsis_mimiciii.csv','Delimiter',',');
+%writetable(sepsis,'sepsis_mimiciii.csv','Delimiter',',');

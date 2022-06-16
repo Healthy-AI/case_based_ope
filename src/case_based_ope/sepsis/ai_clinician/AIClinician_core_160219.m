@@ -84,18 +84,18 @@ coltnorm={'age','admissionweight','gcs','hr','sysbp','meanbp','diabp','rr','temp
     'arterial_be','hco3','arterial_lactate','sofa','sirs','shock_index','pao2_fio2','cumulated_balance_tev'};
 coltlog={'spo2','bun','creatinine','sgot','sgpt','total_bili','inr','input_total_tev','input_4hourly_tev','output_total','output_4hourly'};
 
-coltbin=find(ismember(eICUtable.Properties.VariableNames,coltbin));coltnorm=find(ismember(eICUtable.Properties.VariableNames,coltnorm));coltlog=find(ismember(eICUtable.Properties.VariableNames,coltlog));
+%coltbin=find(ismember(eICUtable.Properties.VariableNames,coltbin));coltnorm=find(ismember(eICUtable.Properties.VariableNames,coltnorm));coltlog=find(ismember(eICUtable.Properties.VariableNames,coltlog));
 
-Xtest=eICUtable(:, [coltbin coltnorm coltlog]);
+%Xtest=eICUtable(:, [coltbin coltnorm coltlog]);
 
 % shuffle columns so test match train
-Xtest = Xtest(:,[1:43 45:47 44]);Xtest = Xtest(:,[1:43 45 44 46:end]);Xtest = Xtest(:,[1:39 41:42 40 43:end]);Xtest = Xtest(:,[1:32 34 33 35:end]);
-Xtest = Xtest(:,[1:13 15:32 14 33:end]);Xtest = Xtest(:,[1:13 31 14:30 32:end]);Xtest = Xtest(:,[1:14 16 15 17:end]);Xtest = Xtest(:,[1:10 12 11 13:end]);
-Xtest = Xtest(:,[1:8 10:12 9 13:end]);Xtest = Xtest(:,[1 4 2:3 5:end]);Xtest = Xtest(:,[1:29 31 30 32:end]);Xtest = Xtest(:,[1:32 34 33 35:end]);
-Xtest = Xtest(:,[1:44 46 45 end]);Xtest = Xtest(:,[1:43 45:46 44 end]);
+%Xtest = Xtest(:,[1:43 45:47 44]);Xtest = Xtest(:,[1:43 45 44 46:end]);Xtest = Xtest(:,[1:39 41:42 40 43:end]);Xtest = Xtest(:,[1:32 34 33 35:end]);
+%Xtest = Xtest(:,[1:13 15:32 14 33:end]);Xtest = Xtest(:,[1:13 31 14:30 32:end]);Xtest = Xtest(:,[1:14 16 15 17:end]);Xtest = Xtest(:,[1:10 12 11 13:end]);
+%Xtest = Xtest(:,[1:8 10:12 9 13:end]);Xtest = Xtest(:,[1 4 2:3 5:end]);Xtest = Xtest(:,[1:29 31 30 32:end]);Xtest = Xtest(:,[1:32 34 33 35:end]);
+%Xtest = Xtest(:,[1:44 46 45 end]);Xtest = Xtest(:,[1:43 45:46 44 end]);
 
-eICUraw=table2array(Xtest);
-eICUraw(isnan(eICUraw(:,45)),45)=0;  %replace NAN fluid with 0
+%eICUraw=table2array(Xtest);
+%eICUraw(isnan(eICUraw(:,45)),45)=0;  %replace NAN fluid with 0
     
 % compute conversion factors using MIMIC data
 a=MIMICraw(:, 1:3)-0.5; 
@@ -104,13 +104,13 @@ a=MIMICraw(:, 1:3)-0.5;
 [d,dmu,dsigma]=zscore(log(0.1+MIMICraw(:,37:47)));
 
 % ZSCORE full at once XTEST using the factors from training data
-eICUzs=eICUraw;
-eICUzs(:,1:3)=eICUzs(:,1:3)-0.5;
-eICUzs(:,4)=log(eICUzs(:,4)+0.1);
-eICUzs(:,5:36)=(eICUzs(:,5:36)-cmu)./csigma;
-eICUzs(:,37:47)=(log(0.1+eICUzs(:,37:47))-dmu)./dsigma;
+%eICUzs=eICUraw;
+%eICUzs(:,1:3)=eICUzs(:,1:3)-0.5;
+%eICUzs(:,4)=log(eICUzs(:,4)+0.1);
+%eICUzs(:,5:36)=(eICUzs(:,5:36)-cmu)./csigma;
+%eICUzs(:,37:47)=(log(0.1+eICUzs(:,37:47))-dmu)./dsigma;
 
-if sum(isnan(eICUraw(:,4))) >0 || sum(isnan(eICUraw(:,45)))>0;  disp('NaNs in Xtest / drug doses'); disp('EXECUTION STOPPED'); return;end
+%if sum(isnan(eICUraw(:,4))) >0 || sum(isnan(eICUraw(:,45)))>0;  disp('NaNs in Xtest / drug doses'); disp('EXECUTION STOPPED'); return;end
 p=gcp('nocreate'); if isempty(p) ; pool = parpool; end ; mdp_verbose
 stream = RandStream('mlfg6331_64'); options = statset('UseParallel',1,'UseSubstreams',1,'Streams',stream); warning('off','all')
 
@@ -370,7 +370,7 @@ recqvi(modl,23)=quantile(bootmimictestwis,0.01);
 recqvi(modl,24)=quantile(bootmimictestwis,0.05);  %AI 95% LB, we want this as high as possible
 
 
-if recqvi(modl,24) > 40 %saves time if policy is not good on MIMIC test: skips to next model
+if false %recqvi(modl,24) > 40 %saves time if policy is not good on MIMIC test: skips to next model
 
 disp('########################## eICU TEST SET #############################')
 
@@ -480,11 +480,12 @@ recqvi(modl,12)=nanmean(booteicuwis);
 recqvi(modl,13)=quantile(booteicuwis,0.01);  
 recqvi(modl,14)=quantile(booteicuwis,0.05); 
 
-
+else
+    disp('eICU is not available.')
 end
 
 
-if recqvi(modl,24)>0 & recqvi(modl,14)>0   % if 95% LB is >0 : save the model (otherwise it's pointless)
+if recqvi(modl,24)>0 %& recqvi(modl,14)>0   % if 95% LB is >0 : save the model (otherwise it's pointless)
     
     disp('####   GOOD MODEL FOUND - SAVING IT   ####' ) 
     allpols(polkeep,1)={modl};
@@ -497,7 +498,7 @@ if recqvi(modl,24)>0 & recqvi(modl,14)>0   % if 95% LB is >0 : save the model (o
     allpols(polkeep,10)={train};
     allpols(polkeep,11)={qldata3train};
     allpols(polkeep,12)={qldata3test};
-    allpols(polkeep,13)={qldata2};
+    %allpols(polkeep,13)={qldata2};
     polkeep=polkeep+1;
     
 end
@@ -505,11 +506,11 @@ end
  
 end
 
-recqvi(modl:end,:)=[];
+recqvi(modl+1:end,:)=[]; %recqvi(modl:end,:)=[];
 
-tic
-     save('D:\BACKUP MIT PC\Data_160219.mat', '-v7.3');
-toc
+%tic
+%     save('D:\BACKUP MIT PC\Data_160219.mat', '-v7.3');
+%toc
 
 
 %% IDENTIFIES BEST MODEL HERE
@@ -531,10 +532,10 @@ outcome =10; %   HOSPITAL MORTALITY = 8 / 90d MORTA = 10
 ii=find(a==bestpol); %position of best model in the array allpols
 
 % RECOVER MODEL DATA
-Qoff=cell2mat(allpols(ii,2));
+%Qoff=cell2mat(allpols(ii,2));
 Qon=cell2mat(allpols(ii,3));
 physpol=cell2mat(allpols(ii,4));
-softpol=cell2mat(allpols(ii,5));
+%softpol=cell2mat(allpols(ii,5));
 transitionr=cell2mat(allpols(ii,6));
 transitionr2= cell2mat(allpols(ii,7));
 R = cell2mat(allpols(ii,8));
@@ -560,638 +561,638 @@ ptid=reformat5(train,2);
 ptidtestmimic=reformat5(test,2);
 
 
-%recover state membership of eicu samples
-disp('####   IDENTIFY STATE MEMBERSHIP OF eICU TEST RECORDS   ####')
-  idxtest2=cell(size(eICUzs,1),1);
-        ii=isnan(eICUzs);
-    tic
-      parfor i=1:size(eICUzs,1)
-        idxtest2(i)={knnsearch(C(:,~ii(i,:)),eICUzs(i,~ii(i,:)))};  %which ones are the k closest records in Xtrain? - only match on available data (ii columns)!
-      end
-    toc
-    
-  idxtest2=cell2mat(idxtest2);
-
-
-
-%% FIB 2A plot safety of algos: 95th UB of physicians policy value vs 95th LB of AI policy
-% during bulding of 500 different models
-% show that the value of AI policy is always guaranteed to be better than doctors' according to the model
-
-clear h
-r=recqvi;   %MAKE SURE RECQVI IS SORTED BY MODEL NUMBER!!!
-
-m=zeros(size(r,1),1);
-for i=1:size(r,1)
-if r(i,19)>max(m)  %physicians    // OR 19 = 95th percentile!!!!!!!!!!!!
-m(i)=r(i,19);
-else
-m(i)=max(m);
-end
-end
-figure
-h(1)=semilogx(m,'linewidth',2);
-hold on
-
-m=zeros(size(r,1),1);
-for i=1:size(r,1)
-if r(i,24)>max(m)  %learnt policy
-m(i)=r(i,24);
-else
-m(i)=max(m);
-end
-end
-h(2)=semilogx(m,'linewidth',2);
-
-
-m=zeros(size(r,1),1);
-for i=1:size(r,1)
-if r(i,14)>max(m)  %learnt policy
-m(i)=r(i,14);
-else
-m(i)=max(m);
-end
-end
-h(3)=semilogx(m,'linewidth',2);
-
-axis([0 500 0 100])
-xlabel('Number of models built')
-ylabel('Estimated policy value')
-legend([h(2) h(3) h(1)],{'95% LB for best AI policy (MIMIC test set)','95% LB for best AI policy (eICU test set)','95% UB for highest valued clinician policy'},'location','se')
-set(gca,'FontSize',12)
-axis square
-hold off
-
-
-%% FIG 2B BOXPLOT OF POLICY VALUE OVER 500 MODELS -  MIMIC TEST SET ONLY
-
-figure
-clear h
-boxplot(recqvi(:,[20 22 25 26]),{'Clinicians','AI','Zero drug','Random'}); % some evaluations not done here
-h=line([1.5 2.5],[max(recqvi(:,22))  max(recqvi(:,22))] ,'LineWidth',2,'color','g');
-axis square
-axis([0.5 4.5 -100 100])
-legend(h,'Chosen policy','location','sw')
-ylabel('Estimated policy value')
-set(gca,'FontSize',12)
-
-
-%% FIG 2C = MODEL CALIBRATION
-
-% TD learning of physicians / bootstrapped, in MIMIC train set.
-% This version also records action return and mortality, for the plot (nb: no parfor here)
-
-disp('####   MODEL CALIBRATION - CLINICIANS POLICY EVALUATION WITH TD LEARNING   ####')
-tic
-[bootql,prog]=offpolicy_eval_tdlearning_with_morta( qldata3train, physpol, ptid,  idx, actionbloctrain, Y90, 0.99, 100 ); %100 reps
-toc
-
-nbins=100;
-a=prog(:,1);  %Q values of actual actions
-qv=floor((a+100)/(200/nbins))+1;  % converts Q values to integers btw 0 and nbins
- m=prog(:,2);  %outcome
-h=zeros(nbins,5);  %avg mortality and other results, per bin
- 
-for i=1:nbins
-    
-    ii=qv==i;
-    h(i,1)=nanmean(m(ii));  %mean mortality in this bin
-    if numel(m(ii))>0
-     h(i,5)=nanmean(a(ii));  %record the mean of Q values in the bin (to make sure it matches what I expect)
-    end
-    h(i,2)=std(m(ii))/sqrt(numel(m(ii)));  %SEM of mortality in this bin
-    h(i,3)=numel(m(ii));  %nb of data points in this bin
-end
- 
-h(:,4)=h(:,1).*h(:,3)./numel(qv);%weighted average!!
-[nansum(h(:,4)) mean(prog(:,2))] %check that both are close!
- 
-yy1=smooth(1:nbins,h(:,1),0.1,'rloess');
-figure
-hold on
-line([0 nbins], [0.5 0.5], 'LineStyle',':','color','k');
-line([nbins/2 nbins/2], [0 1], 'LineStyle',':','color','k');
- 
-H=plot(h(:,1),'b','linewidth',1);
-plot(h(:,1)+h(:,2),'b','linewidth',0.5);
-plot(h(:,1)-h(:,2),'b','linewidth',0.5);
- 
-ylabel('Mortality risk');
-xlabel('Return of actions')
-axis([0 nbins 0 1]); ax=gca;
-ax.XTick=0:nbins/10:nbins; ax.XTickLabel =num2cell(-100:20:100);
-bw=0.5*200/nbins;
-H=plot(yy1,'r','linewidth',1);
-axis square
-set(gca,'FontSize',12)
-hold off
-
-
-%% FIG 2D = Computes avg Q value per patient / MIMIC TRAIN SET
-  
-r=array2table(prog);
-r.Properties.VariableNames = {'Qoff','morta','id','rep'};
-d=grpstats(r,{'rep','id'},{'mean','median','sum'});
-edges=-100:5:100;
-
-figure
-h(1)=histogram(d.mean_Qoff(d.mean_morta==0),edges,'facecolor','b','normalization','probability');
-hold on
-h(2)=histogram(d.mean_Qoff(d.mean_morta==1),edges,'facecolor','r','normalization','probability');
-hold off
-legend([h(1) h(2)],{'Survivors','Non-survivors'},'location','nw')
-axis square
-xlabel('Average return per patient')
-ylabel('Probability')
-set(gca,'FontSize',12)
-
-
-%% evaluation of chosen model on eICU
-
-disp('####   TESTING CHOSEN MODEL ON eICU    ####')
-
-
-tic 
- [ booteicuql,booteicuwis] = offpolicy_multiple_eval_010518( qldata2,physpol, 0.99,1,500,8000);
-toc
-  
-booteicuql=repmat(booteicuql,floor(size(booteicuwis,1)/size(booteicuql,1)),1);  % copy-paste the array, variance is low anyway
-
-[quantile(booteicuql(:,1),0.25)  quantile(booteicuql(:,1),0.5)   quantile(booteicuql(:,1),0.75)]
-[quantile(booteicuwis(:,1),0.25)  quantile(booteicuwis(:,1),0.5)   quantile(booteicuwis(:,1),0.75)]
-
-
-%% FIG 3A - Heatmap of Q values
- 
-a=[booteicuql booteicuwis];
-[counts] = hist3(a,'Edges',{-105:2.5:100 -105:2.5:100}');
- 
-counts = rot90(counts);
-figure
-imagesc(log10(counts))
-colormap jet
-c=colorbar;
-c.Label.String = 'Booststrap estimates (log10 scale)';
-axis square
-hold on
-axis([1 83 1 83])
-line([1 83],[83 1],'LineWidth',2,'color','w');
-ax = gca;
-ax.YTick=1:10:100;
-ax.YTickLabel = {'100', '75','50','25','0','-25','-50','-75','-100'};
-ax.XTick=2:10:100;
-ax.XTickLabel = {'-100','-75','-50','-25','0','25','50','75','100'};
-xlabel('Clinicans'' policy value')
-ylabel('AI policy value')
-set(gca,'FontSize',12)
-hold off
-
-
-%%  FIGS 3B3C : 5x5 3D histogram for distrib of action from eICU   
-
-nra=5;
-iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
-vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
- 
- a= reformat5(:,iol);                   %IV fluid
- a= tiedrank(a(a>0)) / length(a(a>0));   % excludes zero fluid (will be action 1)
- 
-        iof=floor((a+0.2499999999)*4);  %converts iv volume in 4 actions
-        a= reformat5(:,iol); a=find(a>0);  %location of non-zero fluid in big matrix
-        io=ones(size(reformat5,1),1);  %array of ones, by default     
-        io(a)=iof+1;   %where more than zero fluid given: save actual action
-        vc=reformat5(:,vcl);  vcr= tiedrank(vc(vc~=0)) / numel(vc(vc~=0)); vcr=floor((vcr+0.249999999999)*4);  %converts to 4 bins
-        vcr(vcr==0)=1; vc(vc~=0)=vcr+1; vc(vc==0)=1;
-        ma1=[ median(reformat5(io==1,iol))  median(reformat5(io==2,iol))  median(reformat5(io==3,iol))  median(reformat5(io==4,iol))  median(reformat5(io==5,iol))];  %median dose of drug in all bins
-        ma2=[ median(reformat5(vc==1,vcl))  median(reformat5(vc==2,vcl))  median(reformat5(vc==3,vcl))  median(reformat5(vc==4,vcl))  median(reformat5(vc==5,vcl))] ;
-  
-med=[io vc];
-[uniqueValues,~,actionbloc] = unique(array2table(med),'rows');
-actionbloctrain=actionbloc(train);
-uniqueValuesdose=[ ma2(uniqueValues.med2)' ma1(uniqueValues.med1)'];  % median dose of each bin for all 25 actions
- 
-iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
-vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
- ma1=[ max(reformat5(io==1,iol))  max(reformat5(io==2,iol))  max(reformat5(io==3,iol))  max(reformat5(io==4,iol))  max(reformat5(io==5,iol))];  %upper dose of drug in all bins
- ma2=[ max(reformat5(vc==1,vcl))  max(reformat5(vc==2,vcl))  max(reformat5(vc==3,vcl))  max(reformat5(vc==4,vcl))  max(reformat5(vc==5,vcl))] ;
- 
-
-% define actionbloctest = which actions are taken in the test set ????
-vct=eICUraw(:,4); vct(vct>ma2(nra-1))=nra; vct(vct==0)=1; for z=2:nra-1; vct(vct>ma2(z-1) & vct<=ma2(z))=z;end
-iot=eICUraw(:,45); for z=2:nra-1; iot(iot>ma1(z-1) & iot<=ma1(z))=z; end;iot(iot>ma1(nra-1))=nra;iot(iot==0)=1;
- 
-med=[iot vct];
-
- 
-figure
-subplot(1,2,1)   % /////////////   ACTUAL ACTIONS   ////////////////
- 
-[counts] = hist3(med,'Edges',{1:5 1:5})./size(med,1);
- counts = flipud(counts);
-b=bar3(counts);
-for k = 1:length(b)
-    zdata = b(k).ZData;
-    b(k).CData = zdata;
-    b(k).FaceColor = 'interp';
-end
-
-ax = gca;
-ax.YTick=1:5;
-ax.XTick=1:5;
-ax.YTickLabel = {'>530', '180-530','50-180','1-50','0'};
-ax.XTickLabel = {'0', '0.001-0.08','0.08-0.22','0.22-0.45','>0.45'};
-view(45,35)
-xlabel('Vasopressor dose')
-ylabel('     IV fluids dose')
-set(get(gca,'YLabel'),'Position',[6, 6, 0]);
-set(get(gca,'XLabel'),'Position',[6, 6, 0]);
-
-title('Clinicians'' policy')
-c=colorbar;
-c.Label.String = '%';
-axis square
-axis([0.5 5.5 0.5 5.5 0 0.3])
-set(gca,'FontSize',12)
-  
-
-disp('##########   Clinician   ##########')
-disp('  on vaso     ¦ on low fluid')
-disp([sum(sum(counts(:,2:5))) sum(sum(counts(4:5,:)))])
-disp('  on vaso and low fluids    ¦ on no vaso and high fluid')
-disp([sum(sum(counts(3:5,2:5)))  sum(sum(counts(1:2,1)))])
-disp('  on low vaso ')
-disp([sum(sum(counts(:,2:4)))  ])
-
-
-subplot(1,2,2)  % /////////////   OPTIMAL ACTIONS   ////////////////
-OA1=OptimalAction(idxtest2);%test);              %optimal action for each record
-a=[OA1 floor((OA1-0.0001)./5)+1 OA1-floor(OA1./5)*5];
-a(a(:,3)==0,3)=5;
-med=a(:,[2 3]);
-[counts] = hist3(med,'Edges',{1:5 1:5})./size(med,1);
-  counts = flipud(counts);
- 
- b=bar3(counts);
-for k = 1:length(b)
-    zdata = b(k).ZData;
-    b(k).CData = zdata;
-    b(k).FaceColor = 'interp';
-end
-
-disp('##########   AI Clinician   ##########')
-disp('  on vaso     ¦ on low fluid')
-disp([sum(sum(counts(:,2:5))) sum(sum(counts(4:5,:)))])
-disp('  on vaso and low fluids    ¦ on no vaso and high fluid')
-disp([sum(sum(counts(3:5,2:5)))  sum(sum(counts(1:2,1)))])
-disp('  on low vaso ')
-disp([sum(sum(counts(:,2:4)))  ])
-
-
-colorbar
-ax = gca;
-ax.YTick=1:5;
-ax.XTick=1:5;
-ax.YTickLabel = {'>530', '180-530','50-180','1-50','0'};
-ax.XTickLabel = {'0', '0.001-0.08','0.08-0.22','0.22-0.45','>0.45'};
-view(45,35)
-xlabel('Vasopressor dose')
-ylabel('     IV fluids dose')
-set(get(gca,'YLabel'),'Position',[6, 6, 0]);
-set(get(gca,'XLabel'),'Position',[6, 6, 0]);
-title('AI policy')
-c=colorbar;
-c.Label.String = '%';
-axis square
-axis([0.5 5.5 0.5 5.5 0 0.3])
-set(gca,'FontSize',12)
-
-
-%% FIGS 3D & 3E : "Ucurves" eICU TEST SET with bootstrapped CI
-
-t=[-1250:100:1250]; t2=[-1.05:0.1:1.05];
-
-nr_reps=200; 
-p=unique(qldata2(:,8));
-prop=10000/numel(p); %10k patients of the samples are used
-prop=min([prop 0.75]);  %max possible value is 0.75 (75% of the samples are used)
-
-% ACTUAL DATA
-disp('U-curves with actual doses...')
-% column key:  9 given fluid    10 given vaso    11 model dose fluid     12 model dose vaso
-qldata=qldata2(qldata2(:,3)~=0,:);
-qldata(:,14)=qldata(:,10)-qldata(:,12);
-qldata(:,15)=qldata(:,9)-qldata(:,11);
-
-r=array2table(qldata(:,[8 13 14 15]));  
-r.Properties.VariableNames = {'id','morta','vaso','ivf'};
-d=grpstats(r,'id',{'mean','median','sum'});
-d3=([d.mean_morta d.mean_vaso d.mean_ivf d.median_vaso d.median_ivf d.sum_ivf d.GroupCount]);
-r1=zeros(numel(t)-1,nr_reps,2);
-r2=zeros(numel(t2)-1,nr_reps,2);
-
-for rep=1:nr_reps
-    
-disp(rep);
-ii=floor(rand(size(p,1),1)+prop);     % select a random sample of trajectories
-d4=d3(ii==1,:);
-
-a=[];     % IVF
-b=[];     % vasopressors
-
-
-for i=1:numel(t)-1
-    ii=d4(:,5)>=t(i) & d4(:,5)<=t(i+1);  %median
-    a=[a ; [t(i) t(i+1) sum(ii) nanmean(d4(ii,1)) nanstd(d4(ii,1))]];
-end
-r1(:,rep,1)=a(:,4);
-r1(:,rep,2)=a(:,3);
-r1(:,rep,3)=a(:,5)./sqrt(a(:,3));  % SEM !!
-
-for i=1:numel(t2)-1
-    ii=d4(:,4)>=t2(i) & d4(:,4)<=t2(i+1);   %median
-    b=[b ; [t2(i) t2(i+1) sum(ii) nanmean(d4(ii,1)) nanstd(d4(ii,1))]];
-end
-r2(:,rep,1)=b(:,4);
-r2(:,rep,2)=b(:,3);
-r2(:,rep,3)=b(:,5)./sqrt(b(:,3));  % SEM !!
-
-end
-
-a1=nanmean(r1(:,:,1),2);
-a2=nanmean(r2(:,:,1),2);
-
-
-% computing SEM in each bin
-s1=nan(numel(t)-1,1);
-for i=1:numel(t)-1
-s1(i)=nanstd([ones(nansum(r1(i,:,1).*r1(i,:,2) ),1); zeros(nansum((1-r1(i,:,1)).*r1(i,:,2)),1)])/sqrt(nansum(r1(i,:,2)));
-end
-s2=nan(numel(t2)-1,1);
-for i=1:numel(t2)-1
-s2(i)=nanstd([ones(nansum(r2(i,:,1).*r2(i,:,2) ),1); zeros(nansum((1-r2(i,:,1)).*r2(i,:,2)),1)])/sqrt(nansum(r2(i,:,2)));
-end
-
-
-
-
-
-%% FIG 3D & 3E - "U-CURVE"  PLOT  ONLY OPTIMAL POLICY   
-t=[-1250:100:1250]; t2=[-1.05:0.1:1.05];
-
-s=0;  %  !!!!  SMOOTHING FACTOR  !!!! use 0 for no smooth curves
-f=10;   %inflation factor for SEM (for visualisation purposes)
-figure
-if s>0
-    
-yy1=smooth(1:numel(a1),a1,s,'loess');
-yy2=smooth(1:numel(ar1),ar1,s,'loess');
-end
-subplot(1,2,1)
-hold on
-h=plot(a1,'b','linewidth',1);
-plot(a1+f*s1,'b:','linewidth',1)
-plot(a1-f*s1,'b:','linewidth',1)
-
-plot([numel(a1)/2+.5 numel(a1)/2+.5],[0 1],'k:');
-xlabel('Average dose excess per patient')
-ylabel('Mortality')
-axis([1 numel(a1) 0 1]); ax=gca;
-t=t-(t(end)-t(end-1))/2;
-t=round(t,2);
-t=t(2:2:end);
-ax.XTick=1:2:2*numel(t);
-ax.XTickLabel =num2cell(t); 
-rotateXLabels( gca, 90)
-if s>0
-plot(yy1,'b','linewidth',2);
-plot(yy2,'r','linewidth',2);
-end
-axis square
-title('Intravenous fluids')
-set(gca,'FontSize',12)
-
-hold off
-
-subplot(1,2,2)
-if s>0
-yy1=smooth(1:numel(a2),a2,s,'loess');
-yy2=smooth(1:numel(ar2),ar2,s,'loess');
-end
-
-hold on
-h=plot(a2,'b','linewidth',1);
-plot(a2+f*s2,'b:','linewidth',1)
-plot(a2-f*s2,'b:','linewidth',1)
-plot([numel(a2)/2+.5 numel(a2)/2+.5],[0 1],'k:');
-
-xlabel('Average dose excess per patient')
-ylabel('Mortality')
-axis([1 numel(a2) 0 1]); ax=gca;
-t2=t2-(t2(end)-t2(end-1))/2;
-t2=round(t2,2);
-t2=t2(2:2:end);
-ax.XTick=1:2:2*numel(t2);
-ax.XTickLabel =num2cell(t2); 
-rotateXLabels( gca, 90)
-if s>0
-plot(yy1,'b','linewidth',2);
-plot(yy2,'r','linewidth',2);
-end
-axis square
-title('Vasopressors')
-set(gca,'FontSize',12)
-hold off
-
-
-
-
-%% FIG SA - FEATURE IMPORTANCE for VASOPRESSORS, with bootstraping
-
-nn=100;  %nr bootstraps
-fi=zeros(46,nn);
-fi2=zeros(46,nn);
-colbin = {'gender','mechvent','max_dose_vaso','re_admission'};  %will simply substract 0.5 to center around 0
-colnorm={'age','Weight_kg','GCS','HR','SysBP','MeanBP','DiaBP','RR','Temp_C','FiO2_1', 'Potassium','Sodium','Chloride','Glucose','Magnesium','Calcium','Hb','WBC_count','Platelets_count','PTT','PT','Arterial_pH','paO2','paCO2', 'Arterial_BE','HCO3','Arterial_lactate','SOFA','SIRS','Shock_Index','PaO2_FiO2','cumulated_balance'};
-collog={'SpO2','BUN','Creatinine','SGOT','SGPT','Total_bili','INR','input_total','input_4hourly','output_total','output_4hourly'};
-v=MIMICtable(1,[colbin colnorm collog]).Properties.VariableNames; %get he right column names!
-
-% REMOVE COL 4 = VASOPRESSORS
-v2=v([1:3 5:47]);  %this is the list of (correct) feature names
-v2=regexprep(v2,'_',' ');v2=regexprep(v2,' tev','');v2=regexprep(v2,'bp',' BP');
-
-for i=1:nn
-    i
-grp=floor(100*rand(size(eICUraw,1)-1,1)+1)<=5;  %selects a random x% of data for training
-
-tic
-%actual policy
-br=TreeBagger(15,eICUraw(grp,[1:3 5:47]),qldata(grp,10)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);
-fi(:,i)=br.OOBPermutedPredictorDeltaError;
-%optimal policy
-br2=TreeBagger(15,eICUraw(grp,[1:3 5:47]),qldata(grp,12)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);
-toc
-
-fi2(:,i)=br2.OOBPermutedPredictorDeltaError;
-
-end
-
-
-fi=mean(fi,2);  %average over all models
-fi2=mean(fi2,2);
-
-
-figure
-subplot(1,2,1)
-[~,i]=sort(fi,'asc');
-barh(fi(i))
-ylabel 'Feature'
-xlabel 'Out-of-Bag Feature Importance'
-ax=gca;
-ax.YTick=1:46;
-ax.YTickLabel =v2(i);
-title('Clinicians'' policy')
-set(gca,'FontSize',12)
-subplot(1,2,2)
-[~,i]=sort(fi2,'asc');
-barh(fi2(i))
-ylabel 'Feature'
-xlabel 'Out-of-Bag Feature Importance'
-ax=gca;
-ax.YTick=1:46;
-ax.YTickLabel =v2(i);
-title('AI policy')
-set(gca,'FontSize',12)
-
-%% predict IV fluid O/N
-
-fi=zeros(46,nn);
-fi2=zeros(46,nn);
-% REMOVE COL 45 = IV Fluids
-v2=v([1:44 46:47]);  %this is the list of (correct) feature names
-v2=regexprep(v2,'_',' ');v2=regexprep(v2,' tev','');v2=regexprep(v2,'bp',' BP');
-
-for i=1:nn
-grp=floor(100*rand(size(eICUraw,1)-1,1)+1)<5;  %selects a random x% of data for training
-i
-tic  %actual policy
-br=TreeBagger(10,eICUraw(grp,[1:44 46:47]),qldata(grp,9)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);%100+floor(200*rand()) );
-fi(:,i)=br.OOBPermutedPredictorDeltaError;
-%optimal policy
-br2=TreeBagger(10,eICUraw(grp,[1:44 46:47]),qldata(grp,11)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);%100+floor(200*rand()) );
-toc
-
-fi2(:,i)=br2.OOBPermutedPredictorDeltaError;
-end
-
-fi=mean(fi,2);
-fi2=mean(fi2,2);
-figure
-subplot(1,2,1)
-[~,i]=sort(fi,'asc');
-barh(fi(i))
-ylabel 'Feature'
-xlabel 'Out-of-Bag Feature Importance'
-v2=regexprep(v2,'_',' ');
-ax=gca;
-ax.YTick=1:46;
-ax.YTickLabel =v2(i);
-title('Clinicians'' policy')
-set(gca,'FontSize',12)
-subplot(1,2,2)
-[~,i]=sort(fi2,'asc');
-barh(fi2(i))
-ylabel 'Feature'
-xlabel 'Out-of-Bag Feature Importance'
-v2=regexprep(v2,'_',' ');
-ax=gca;
-ax.YTick=1:46;
-ax.YTickLabel =v2(i);
-title('AI policy')
-set(gca,'FontSize',12)
-
-
-%%   #################    NUMERICAL  RESULTS    ##########################
-
-% STATS btw given and reco doses 22/05/17 in EICU
-
-% category 1 = dose excess negative = given less than reco
-% category 3 = dose excess positive = given more than reco
-
-% similar dose norad if given is withing +/- 10% of reco or 0.02 mkm or 10 ml/h
-
-% KEY:
-%    rectest(:,9)= rectest(:,4)- rectest(:,5);  %given  - reco  VASOPRESSORS
-%    rectest(:,10)= rectest(:,6)- rectest(:,7);  %given - reco  FLUIDS
-
-qldata=qldata2(qldata2(:,3)~=0,:);
-qldata(:,14)=qldata(:,10)-qldata(:,12);
-qldata(:,15)=qldata(:,9)-qldata(:,11);
-
-% VASOPRESSORS
-j=abs((qldata(:,10)-qldata(:,12))./(qldata(:,10))).*100;% PCT difference btw given and reco  VASOPRESSORS
-qldata(:,17)=abs(qldata(:,14))<=0.02| j<=10;   %close dose
-ii=qldata(:,17)==1;   
-% sum(ii)/numel(ii)  % how many received close to optimal dose?
-qldata(ii,17)=qldata(ii,17)+1;% category 2 = dose similar
-ii=qldata(:,17)==0 & qldata(:,14)<0;%less than reco
-qldata(ii,17)=1;% category 1
-ii=qldata(:,17)==0 & qldata(:,14)>0; %more than reco
-qldata(ii,17)=3;% category 3
-
-% stats for all 3 categories
-a=[];
-for i=1:3
-    ii=qldata(:,17)==i;   %rows in qldata who corresp to this category
-    j=qldata(ii,14);   %dose
-
-a=[a;    [sum(ii)/numel(ii) mean(qldata(ii,13)) std(qldata(ii,13))./sqrt(sum(ii)) quantile(j,0.25) median(j) quantile(j,0.75)]];
-end
-
-
-% FLUIDS
-j= abs((qldata(:,9)-qldata(:,11))./(qldata(:,9))).*100;% PCT difference btw given and reco FLUIDS
-qldata(:,18)=j<=10| abs(qldata(:,15))<=40;   %close dose (40 ml/4h = 10 ml / h)
-ii=qldata(:,18)==1;   
-% sum(ii)/numel(ii) % how many received close to optimal dose?
-qldata(ii,18)=qldata(ii,18)+1;   % category 2 = dose similar
-ii=qldata(:,18)==0 & qldata(:,15)<0;%less than reco
-qldata(ii,18)=1;  %cat 1
-ii=qldata(:,18)==0 & qldata(:,15)>0; %more than reco
-qldata(ii,18)=3;   % cat 3
-
-
-% stats for all 3 categories
+% %recover state membership of eicu samples
+% disp('####   IDENTIFY STATE MEMBERSHIP OF eICU TEST RECORDS   ####')
+%   idxtest2=cell(size(eICUzs,1),1);
+%         ii=isnan(eICUzs);
+%     tic
+%       parfor i=1:size(eICUzs,1)
+%         idxtest2(i)={knnsearch(C(:,~ii(i,:)),eICUzs(i,~ii(i,:)))};  %which ones are the k closest records in Xtrain? - only match on available data (ii columns)!
+%       end
+%     toc
+%     
+%   idxtest2=cell2mat(idxtest2);
+
+
+
+% %% FIB 2A plot safety of algos: 95th UB of physicians policy value vs 95th LB of AI policy
+% % during bulding of 500 different models
+% % show that the value of AI policy is always guaranteed to be better than doctors' according to the model
+% 
+% clear h
+% r=recqvi;   %MAKE SURE RECQVI IS SORTED BY MODEL NUMBER!!!
+% 
+% m=zeros(size(r,1),1);
+% for i=1:size(r,1)
+% if r(i,19)>max(m)  %physicians    // OR 19 = 95th percentile!!!!!!!!!!!!
+% m(i)=r(i,19);
+% else
+% m(i)=max(m);
+% end
+% end
+% figure
+% h(1)=semilogx(m,'linewidth',2);
+% hold on
+% 
+% m=zeros(size(r,1),1);
+% for i=1:size(r,1)
+% if r(i,24)>max(m)  %learnt policy
+% m(i)=r(i,24);
+% else
+% m(i)=max(m);
+% end
+% end
+% h(2)=semilogx(m,'linewidth',2);
+% 
+% 
+% m=zeros(size(r,1),1);
+% for i=1:size(r,1)
+% if r(i,14)>max(m)  %learnt policy
+% m(i)=r(i,14);
+% else
+% m(i)=max(m);
+% end
+% end
+% h(3)=semilogx(m,'linewidth',2);
+% 
+% axis([0 500 0 100])
+% xlabel('Number of models built')
+% ylabel('Estimated policy value')
+% legend([h(2) h(3) h(1)],{'95% LB for best AI policy (MIMIC test set)','95% LB for best AI policy (eICU test set)','95% UB for highest valued clinician policy'},'location','se')
+% set(gca,'FontSize',12)
+% axis square
+% hold off
+% 
+% 
+% %% FIG 2B BOXPLOT OF POLICY VALUE OVER 500 MODELS -  MIMIC TEST SET ONLY
+% 
+% figure
+% clear h
+% boxplot(recqvi(:,[20 22 25 26]),{'Clinicians','AI','Zero drug','Random'}); % some evaluations not done here
+% h=line([1.5 2.5],[max(recqvi(:,22))  max(recqvi(:,22))] ,'LineWidth',2,'color','g');
+% axis square
+% axis([0.5 4.5 -100 100])
+% legend(h,'Chosen policy','location','sw')
+% ylabel('Estimated policy value')
+% set(gca,'FontSize',12)
+% 
+% 
+% %% FIG 2C = MODEL CALIBRATION
+% 
+% % TD learning of physicians / bootstrapped, in MIMIC train set.
+% % This version also records action return and mortality, for the plot (nb: no parfor here)
+% 
+% disp('####   MODEL CALIBRATION - CLINICIANS POLICY EVALUATION WITH TD LEARNING   ####')
+% tic
+% [bootql,prog]=offpolicy_eval_tdlearning_with_morta( qldata3train, physpol, ptid,  idx, actionbloctrain, Y90, 0.99, 100 ); %100 reps
+% toc
+% 
+% nbins=100;
+% a=prog(:,1);  %Q values of actual actions
+% qv=floor((a+100)/(200/nbins))+1;  % converts Q values to integers btw 0 and nbins
+%  m=prog(:,2);  %outcome
+% h=zeros(nbins,5);  %avg mortality and other results, per bin
+%  
+% for i=1:nbins
+%     
+%     ii=qv==i;
+%     h(i,1)=nanmean(m(ii));  %mean mortality in this bin
+%     if numel(m(ii))>0
+%      h(i,5)=nanmean(a(ii));  %record the mean of Q values in the bin (to make sure it matches what I expect)
+%     end
+%     h(i,2)=std(m(ii))/sqrt(numel(m(ii)));  %SEM of mortality in this bin
+%     h(i,3)=numel(m(ii));  %nb of data points in this bin
+% end
+%  
+% h(:,4)=h(:,1).*h(:,3)./numel(qv);%weighted average!!
+% [nansum(h(:,4)) mean(prog(:,2))] %check that both are close!
+%  
+% yy1=smooth(1:nbins,h(:,1),0.1,'rloess');
+% figure
+% hold on
+% line([0 nbins], [0.5 0.5], 'LineStyle',':','color','k');
+% line([nbins/2 nbins/2], [0 1], 'LineStyle',':','color','k');
+%  
+% H=plot(h(:,1),'b','linewidth',1);
+% plot(h(:,1)+h(:,2),'b','linewidth',0.5);
+% plot(h(:,1)-h(:,2),'b','linewidth',0.5);
+%  
+% ylabel('Mortality risk');
+% xlabel('Return of actions')
+% axis([0 nbins 0 1]); ax=gca;
+% ax.XTick=0:nbins/10:nbins; ax.XTickLabel =num2cell(-100:20:100);
+% bw=0.5*200/nbins;
+% H=plot(yy1,'r','linewidth',1);
+% axis square
+% set(gca,'FontSize',12)
+% hold off
+% 
+% 
+% %% FIG 2D = Computes avg Q value per patient / MIMIC TRAIN SET
+%   
+% r=array2table(prog);
+% r.Properties.VariableNames = {'Qoff','morta','id','rep'};
+% d=grpstats(r,{'rep','id'},{'mean','median','sum'});
+% edges=-100:5:100;
+% 
+% figure
+% h(1)=histogram(d.mean_Qoff(d.mean_morta==0),edges,'facecolor','b','normalization','probability');
+% hold on
+% h(2)=histogram(d.mean_Qoff(d.mean_morta==1),edges,'facecolor','r','normalization','probability');
+% hold off
+% legend([h(1) h(2)],{'Survivors','Non-survivors'},'location','nw')
+% axis square
+% xlabel('Average return per patient')
+% ylabel('Probability')
+% set(gca,'FontSize',12)
+% 
+% 
+% %% evaluation of chosen model on eICU
+% 
+% disp('####   TESTING CHOSEN MODEL ON eICU    ####')
+% 
+% 
+% tic 
+%  [ booteicuql,booteicuwis] = offpolicy_multiple_eval_010518( qldata2,physpol, 0.99,1,500,8000);
+% toc
+%   
+% booteicuql=repmat(booteicuql,floor(size(booteicuwis,1)/size(booteicuql,1)),1);  % copy-paste the array, variance is low anyway
+% 
+% [quantile(booteicuql(:,1),0.25)  quantile(booteicuql(:,1),0.5)   quantile(booteicuql(:,1),0.75)]
+% [quantile(booteicuwis(:,1),0.25)  quantile(booteicuwis(:,1),0.5)   quantile(booteicuwis(:,1),0.75)]
+% 
+% 
+% %% FIG 3A - Heatmap of Q values
+%  
+% a=[booteicuql booteicuwis];
+% [counts] = hist3(a,'Edges',{-105:2.5:100 -105:2.5:100}');
+%  
+% counts = rot90(counts);
+% figure
+% imagesc(log10(counts))
+% colormap jet
+% c=colorbar;
+% c.Label.String = 'Booststrap estimates (log10 scale)';
+% axis square
+% hold on
+% axis([1 83 1 83])
+% line([1 83],[83 1],'LineWidth',2,'color','w');
+% ax = gca;
+% ax.YTick=1:10:100;
+% ax.YTickLabel = {'100', '75','50','25','0','-25','-50','-75','-100'};
+% ax.XTick=2:10:100;
+% ax.XTickLabel = {'-100','-75','-50','-25','0','25','50','75','100'};
+% xlabel('Clinicans'' policy value')
+% ylabel('AI policy value')
+% set(gca,'FontSize',12)
+% hold off
+% 
+% 
+% %%  FIGS 3B3C : 5x5 3D histogram for distrib of action from eICU   
+% 
+% nra=5;
+% iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
+% vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
+%  
+%  a= reformat5(:,iol);                   %IV fluid
+%  a= tiedrank(a(a>0)) / length(a(a>0));   % excludes zero fluid (will be action 1)
+%  
+%         iof=floor((a+0.2499999999)*4);  %converts iv volume in 4 actions
+%         a= reformat5(:,iol); a=find(a>0);  %location of non-zero fluid in big matrix
+%         io=ones(size(reformat5,1),1);  %array of ones, by default     
+%         io(a)=iof+1;   %where more than zero fluid given: save actual action
+%         vc=reformat5(:,vcl);  vcr= tiedrank(vc(vc~=0)) / numel(vc(vc~=0)); vcr=floor((vcr+0.249999999999)*4);  %converts to 4 bins
+%         vcr(vcr==0)=1; vc(vc~=0)=vcr+1; vc(vc==0)=1;
+%         ma1=[ median(reformat5(io==1,iol))  median(reformat5(io==2,iol))  median(reformat5(io==3,iol))  median(reformat5(io==4,iol))  median(reformat5(io==5,iol))];  %median dose of drug in all bins
+%         ma2=[ median(reformat5(vc==1,vcl))  median(reformat5(vc==2,vcl))  median(reformat5(vc==3,vcl))  median(reformat5(vc==4,vcl))  median(reformat5(vc==5,vcl))] ;
+%   
+% med=[io vc];
+% [uniqueValues,~,actionbloc] = unique(array2table(med),'rows');
+% actionbloctrain=actionbloc(train);
+% uniqueValuesdose=[ ma2(uniqueValues.med2)' ma1(uniqueValues.med1)'];  % median dose of each bin for all 25 actions
+%  
+% iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
+% vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
+%  ma1=[ max(reformat5(io==1,iol))  max(reformat5(io==2,iol))  max(reformat5(io==3,iol))  max(reformat5(io==4,iol))  max(reformat5(io==5,iol))];  %upper dose of drug in all bins
+%  ma2=[ max(reformat5(vc==1,vcl))  max(reformat5(vc==2,vcl))  max(reformat5(vc==3,vcl))  max(reformat5(vc==4,vcl))  max(reformat5(vc==5,vcl))] ;
+%  
+% 
+% % define actionbloctest = which actions are taken in the test set ????
+% vct=eICUraw(:,4); vct(vct>ma2(nra-1))=nra; vct(vct==0)=1; for z=2:nra-1; vct(vct>ma2(z-1) & vct<=ma2(z))=z;end
+% iot=eICUraw(:,45); for z=2:nra-1; iot(iot>ma1(z-1) & iot<=ma1(z))=z; end;iot(iot>ma1(nra-1))=nra;iot(iot==0)=1;
+%  
+% med=[iot vct];
+% 
+%  
+% figure
+% subplot(1,2,1)   % /////////////   ACTUAL ACTIONS   ////////////////
+%  
+% [counts] = hist3(med,'Edges',{1:5 1:5})./size(med,1);
+%  counts = flipud(counts);
+% b=bar3(counts);
+% for k = 1:length(b)
+%     zdata = b(k).ZData;
+%     b(k).CData = zdata;
+%     b(k).FaceColor = 'interp';
+% end
+% 
+% ax = gca;
+% ax.YTick=1:5;
+% ax.XTick=1:5;
+% ax.YTickLabel = {'>530', '180-530','50-180','1-50','0'};
+% ax.XTickLabel = {'0', '0.001-0.08','0.08-0.22','0.22-0.45','>0.45'};
+% view(45,35)
+% xlabel('Vasopressor dose')
+% ylabel('     IV fluids dose')
+% set(get(gca,'YLabel'),'Position',[6, 6, 0]);
+% set(get(gca,'XLabel'),'Position',[6, 6, 0]);
+% 
+% title('Clinicians'' policy')
+% c=colorbar;
+% c.Label.String = '%';
+% axis square
+% axis([0.5 5.5 0.5 5.5 0 0.3])
+% set(gca,'FontSize',12)
+%   
+% 
+% disp('##########   Clinician   ##########')
+% disp('  on vaso     ¦ on low fluid')
+% disp([sum(sum(counts(:,2:5))) sum(sum(counts(4:5,:)))])
+% disp('  on vaso and low fluids    ¦ on no vaso and high fluid')
+% disp([sum(sum(counts(3:5,2:5)))  sum(sum(counts(1:2,1)))])
+% disp('  on low vaso ')
+% disp([sum(sum(counts(:,2:4)))  ])
+% 
+% 
+% subplot(1,2,2)  % /////////////   OPTIMAL ACTIONS   ////////////////
+% OA1=OptimalAction(idxtest2);%test);              %optimal action for each record
+% a=[OA1 floor((OA1-0.0001)./5)+1 OA1-floor(OA1./5)*5];
+% a(a(:,3)==0,3)=5;
+% med=a(:,[2 3]);
+% [counts] = hist3(med,'Edges',{1:5 1:5})./size(med,1);
+%   counts = flipud(counts);
+%  
+%  b=bar3(counts);
+% for k = 1:length(b)
+%     zdata = b(k).ZData;
+%     b(k).CData = zdata;
+%     b(k).FaceColor = 'interp';
+% end
+% 
+% disp('##########   AI Clinician   ##########')
+% disp('  on vaso     ¦ on low fluid')
+% disp([sum(sum(counts(:,2:5))) sum(sum(counts(4:5,:)))])
+% disp('  on vaso and low fluids    ¦ on no vaso and high fluid')
+% disp([sum(sum(counts(3:5,2:5)))  sum(sum(counts(1:2,1)))])
+% disp('  on low vaso ')
+% disp([sum(sum(counts(:,2:4)))  ])
+% 
+% 
+% colorbar
+% ax = gca;
+% ax.YTick=1:5;
+% ax.XTick=1:5;
+% ax.YTickLabel = {'>530', '180-530','50-180','1-50','0'};
+% ax.XTickLabel = {'0', '0.001-0.08','0.08-0.22','0.22-0.45','>0.45'};
+% view(45,35)
+% xlabel('Vasopressor dose')
+% ylabel('     IV fluids dose')
+% set(get(gca,'YLabel'),'Position',[6, 6, 0]);
+% set(get(gca,'XLabel'),'Position',[6, 6, 0]);
+% title('AI policy')
+% c=colorbar;
+% c.Label.String = '%';
+% axis square
+% axis([0.5 5.5 0.5 5.5 0 0.3])
+% set(gca,'FontSize',12)
+% 
+% 
+% %% FIGS 3D & 3E : "Ucurves" eICU TEST SET with bootstrapped CI
+% 
+% t=[-1250:100:1250]; t2=[-1.05:0.1:1.05];
+% 
+% nr_reps=200; 
+% p=unique(qldata2(:,8));
+% prop=10000/numel(p); %10k patients of the samples are used
+% prop=min([prop 0.75]);  %max possible value is 0.75 (75% of the samples are used)
+% 
+% % ACTUAL DATA
+% disp('U-curves with actual doses...')
+% % column key:  9 given fluid    10 given vaso    11 model dose fluid     12 model dose vaso
+% qldata=qldata2(qldata2(:,3)~=0,:);
+% qldata(:,14)=qldata(:,10)-qldata(:,12);
+% qldata(:,15)=qldata(:,9)-qldata(:,11);
+% 
+% r=array2table(qldata(:,[8 13 14 15]));  
+% r.Properties.VariableNames = {'id','morta','vaso','ivf'};
+% d=grpstats(r,'id',{'mean','median','sum'});
+% d3=([d.mean_morta d.mean_vaso d.mean_ivf d.median_vaso d.median_ivf d.sum_ivf d.GroupCount]);
+% r1=zeros(numel(t)-1,nr_reps,2);
+% r2=zeros(numel(t2)-1,nr_reps,2);
+% 
+% for rep=1:nr_reps
+%     
+% disp(rep);
+% ii=floor(rand(size(p,1),1)+prop);     % select a random sample of trajectories
+% d4=d3(ii==1,:);
+% 
+% a=[];     % IVF
+% b=[];     % vasopressors
+% 
+% 
+% for i=1:numel(t)-1
+%     ii=d4(:,5)>=t(i) & d4(:,5)<=t(i+1);  %median
+%     a=[a ; [t(i) t(i+1) sum(ii) nanmean(d4(ii,1)) nanstd(d4(ii,1))]];
+% end
+% r1(:,rep,1)=a(:,4);
+% r1(:,rep,2)=a(:,3);
+% r1(:,rep,3)=a(:,5)./sqrt(a(:,3));  % SEM !!
+% 
+% for i=1:numel(t2)-1
+%     ii=d4(:,4)>=t2(i) & d4(:,4)<=t2(i+1);   %median
+%     b=[b ; [t2(i) t2(i+1) sum(ii) nanmean(d4(ii,1)) nanstd(d4(ii,1))]];
+% end
+% r2(:,rep,1)=b(:,4);
+% r2(:,rep,2)=b(:,3);
+% r2(:,rep,3)=b(:,5)./sqrt(b(:,3));  % SEM !!
+% 
+% end
+% 
+% a1=nanmean(r1(:,:,1),2);
+% a2=nanmean(r2(:,:,1),2);
+% 
+% 
+% % computing SEM in each bin
+% s1=nan(numel(t)-1,1);
+% for i=1:numel(t)-1
+% s1(i)=nanstd([ones(nansum(r1(i,:,1).*r1(i,:,2) ),1); zeros(nansum((1-r1(i,:,1)).*r1(i,:,2)),1)])/sqrt(nansum(r1(i,:,2)));
+% end
+% s2=nan(numel(t2)-1,1);
+% for i=1:numel(t2)-1
+% s2(i)=nanstd([ones(nansum(r2(i,:,1).*r2(i,:,2) ),1); zeros(nansum((1-r2(i,:,1)).*r2(i,:,2)),1)])/sqrt(nansum(r2(i,:,2)));
+% end
+% 
+% 
+% 
+% 
+% 
+% %% FIG 3D & 3E - "U-CURVE"  PLOT  ONLY OPTIMAL POLICY   
+% t=[-1250:100:1250]; t2=[-1.05:0.1:1.05];
+% 
+% s=0;  %  !!!!  SMOOTHING FACTOR  !!!! use 0 for no smooth curves
+% f=10;   %inflation factor for SEM (for visualisation purposes)
+% figure
+% if s>0
+%     
+% yy1=smooth(1:numel(a1),a1,s,'loess');
+% yy2=smooth(1:numel(ar1),ar1,s,'loess');
+% end
+% subplot(1,2,1)
+% hold on
+% h=plot(a1,'b','linewidth',1);
+% plot(a1+f*s1,'b:','linewidth',1)
+% plot(a1-f*s1,'b:','linewidth',1)
+% 
+% plot([numel(a1)/2+.5 numel(a1)/2+.5],[0 1],'k:');
+% xlabel('Average dose excess per patient')
+% ylabel('Mortality')
+% axis([1 numel(a1) 0 1]); ax=gca;
+% t=t-(t(end)-t(end-1))/2;
+% t=round(t,2);
+% t=t(2:2:end);
+% ax.XTick=1:2:2*numel(t);
+% ax.XTickLabel =num2cell(t); 
+% rotateXLabels( gca, 90)
+% if s>0
+% plot(yy1,'b','linewidth',2);
+% plot(yy2,'r','linewidth',2);
+% end
+% axis square
+% title('Intravenous fluids')
+% set(gca,'FontSize',12)
+% 
+% hold off
+% 
+% subplot(1,2,2)
+% if s>0
+% yy1=smooth(1:numel(a2),a2,s,'loess');
+% yy2=smooth(1:numel(ar2),ar2,s,'loess');
+% end
+% 
+% hold on
+% h=plot(a2,'b','linewidth',1);
+% plot(a2+f*s2,'b:','linewidth',1)
+% plot(a2-f*s2,'b:','linewidth',1)
+% plot([numel(a2)/2+.5 numel(a2)/2+.5],[0 1],'k:');
+% 
+% xlabel('Average dose excess per patient')
+% ylabel('Mortality')
+% axis([1 numel(a2) 0 1]); ax=gca;
+% t2=t2-(t2(end)-t2(end-1))/2;
+% t2=round(t2,2);
+% t2=t2(2:2:end);
+% ax.XTick=1:2:2*numel(t2);
+% ax.XTickLabel =num2cell(t2); 
+% rotateXLabels( gca, 90)
+% if s>0
+% plot(yy1,'b','linewidth',2);
+% plot(yy2,'r','linewidth',2);
+% end
+% axis square
+% title('Vasopressors')
+% set(gca,'FontSize',12)
+% hold off
+% 
+% 
+% 
+% 
+% %% FIG SA - FEATURE IMPORTANCE for VASOPRESSORS, with bootstraping
+% 
+% nn=100;  %nr bootstraps
+% fi=zeros(46,nn);
+% fi2=zeros(46,nn);
+% colbin = {'gender','mechvent','max_dose_vaso','re_admission'};  %will simply substract 0.5 to center around 0
+% colnorm={'age','Weight_kg','GCS','HR','SysBP','MeanBP','DiaBP','RR','Temp_C','FiO2_1', 'Potassium','Sodium','Chloride','Glucose','Magnesium','Calcium','Hb','WBC_count','Platelets_count','PTT','PT','Arterial_pH','paO2','paCO2', 'Arterial_BE','HCO3','Arterial_lactate','SOFA','SIRS','Shock_Index','PaO2_FiO2','cumulated_balance'};
+% collog={'SpO2','BUN','Creatinine','SGOT','SGPT','Total_bili','INR','input_total','input_4hourly','output_total','output_4hourly'};
+% v=MIMICtable(1,[colbin colnorm collog]).Properties.VariableNames; %get he right column names!
+% 
+% % REMOVE COL 4 = VASOPRESSORS
+% v2=v([1:3 5:47]);  %this is the list of (correct) feature names
+% v2=regexprep(v2,'_',' ');v2=regexprep(v2,' tev','');v2=regexprep(v2,'bp',' BP');
+% 
+% for i=1:nn
+%     i
+% grp=floor(100*rand(size(eICUraw,1)-1,1)+1)<=5;  %selects a random x% of data for training
+% 
+% tic
+% %actual policy
+% br=TreeBagger(15,eICUraw(grp,[1:3 5:47]),qldata(grp,10)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);
+% fi(:,i)=br.OOBPermutedPredictorDeltaError;
+% %optimal policy
+% br2=TreeBagger(15,eICUraw(grp,[1:3 5:47]),qldata(grp,12)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);
+% toc
+% 
+% fi2(:,i)=br2.OOBPermutedPredictorDeltaError;
+% 
+% end
+% 
+% 
+% fi=mean(fi,2);  %average over all models
+% fi2=mean(fi2,2);
+% 
+% 
+% figure
+% subplot(1,2,1)
+% [~,i]=sort(fi,'asc');
+% barh(fi(i))
+% ylabel 'Feature'
+% xlabel 'Out-of-Bag Feature Importance'
+% ax=gca;
+% ax.YTick=1:46;
+% ax.YTickLabel =v2(i);
+% title('Clinicians'' policy')
+% set(gca,'FontSize',12)
+% subplot(1,2,2)
+% [~,i]=sort(fi2,'asc');
+% barh(fi2(i))
+% ylabel 'Feature'
+% xlabel 'Out-of-Bag Feature Importance'
+% ax=gca;
+% ax.YTick=1:46;
+% ax.YTickLabel =v2(i);
+% title('AI policy')
+% set(gca,'FontSize',12)
+% 
+% %% predict IV fluid O/N
+% 
+% fi=zeros(46,nn);
+% fi2=zeros(46,nn);
+% % REMOVE COL 45 = IV Fluids
+% v2=v([1:44 46:47]);  %this is the list of (correct) feature names
+% v2=regexprep(v2,'_',' ');v2=regexprep(v2,' tev','');v2=regexprep(v2,'bp',' BP');
+% 
+% for i=1:nn
+% grp=floor(100*rand(size(eICUraw,1)-1,1)+1)<5;  %selects a random x% of data for training
+% i
+% tic  %actual policy
+% br=TreeBagger(10,eICUraw(grp,[1:44 46:47]),qldata(grp,9)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);%100+floor(200*rand()) );
+% fi(:,i)=br.OOBPermutedPredictorDeltaError;
+% %optimal policy
+% br2=TreeBagger(10,eICUraw(grp,[1:44 46:47]),qldata(grp,11)>0,'method','c','maxnumsplits',30,'MinLeafSize',500,'OOBVarImp','on','OOBPred','Off','MinLeaf',150,'PredictorNames',v2);%100+floor(200*rand()) );
+% toc
+% 
+% fi2(:,i)=br2.OOBPermutedPredictorDeltaError;
+% end
+% 
+% fi=mean(fi,2);
+% fi2=mean(fi2,2);
+% figure
+% subplot(1,2,1)
+% [~,i]=sort(fi,'asc');
+% barh(fi(i))
+% ylabel 'Feature'
+% xlabel 'Out-of-Bag Feature Importance'
+% v2=regexprep(v2,'_',' ');
+% ax=gca;
+% ax.YTick=1:46;
+% ax.YTickLabel =v2(i);
+% title('Clinicians'' policy')
+% set(gca,'FontSize',12)
+% subplot(1,2,2)
+% [~,i]=sort(fi2,'asc');
+% barh(fi2(i))
+% ylabel 'Feature'
+% xlabel 'Out-of-Bag Feature Importance'
+% v2=regexprep(v2,'_',' ');
+% ax=gca;
+% ax.YTick=1:46;
+% ax.YTickLabel =v2(i);
+% title('AI policy')
+% set(gca,'FontSize',12)
+% 
+% 
+% %%   #################    NUMERICAL  RESULTS    ##########################
+% 
+% % STATS btw given and reco doses 22/05/17 in EICU
+% 
+% % category 1 = dose excess negative = given less than reco
+% % category 3 = dose excess positive = given more than reco
+% 
+% % similar dose norad if given is withing +/- 10% of reco or 0.02 mkm or 10 ml/h
+% 
+% % KEY:
+% %    rectest(:,9)= rectest(:,4)- rectest(:,5);  %given  - reco  VASOPRESSORS
+% %    rectest(:,10)= rectest(:,6)- rectest(:,7);  %given - reco  FLUIDS
+% 
+% qldata=qldata2(qldata2(:,3)~=0,:);
+% qldata(:,14)=qldata(:,10)-qldata(:,12);
+% qldata(:,15)=qldata(:,9)-qldata(:,11);
+% 
+% % VASOPRESSORS
+% j=abs((qldata(:,10)-qldata(:,12))./(qldata(:,10))).*100;% PCT difference btw given and reco  VASOPRESSORS
+% qldata(:,17)=abs(qldata(:,14))<=0.02| j<=10;   %close dose
+% ii=qldata(:,17)==1;   
+% % sum(ii)/numel(ii)  % how many received close to optimal dose?
+% qldata(ii,17)=qldata(ii,17)+1;% category 2 = dose similar
+% ii=qldata(:,17)==0 & qldata(:,14)<0;%less than reco
+% qldata(ii,17)=1;% category 1
+% ii=qldata(:,17)==0 & qldata(:,14)>0; %more than reco
+% qldata(ii,17)=3;% category 3
+% 
+% % stats for all 3 categories
 % a=[];
-for i=1:3
-    ii=qldata(:,18)==i;   %rows in qldata who corresp to this category
-    j=qldata(ii,15)./4;   %dose in ml/h
-
-a=[a;    [sum(ii)/numel(ii) mean(qldata(ii,13)) std(qldata(ii,13))./sqrt(sum(ii)) quantile(j,0.25) median(j) quantile(j,0.75)]];
-end
-
-i=a(1,1)/(a(1,1)+a(3,1)); ii=a(6,1)/(a(4,1)+a(6,1));
-a=array2table(a);
-a=[ array2table({'Vaso: Less than reco', 'Vaso: Similar dose', 'Vaso: More than reco', 'Fluids: Less than reco' ,'Fluids: Similar dose' ,'Fluids: More than reco'}') a];
-a.Properties.VariableNames={'category','fraction','avg_mortality','SEM','Q1_dose','Q2_dose','Q3_dose'};
-
-disp(a)
-fprintf(' Among patients who did not receive the recommended dose of vasopressors, fraction of patients who received less than recommended : ');       fprintf('%f \n',i); 
-fprintf(' Among patients who did not receive the recommended dose of IV fluids, fraction of patients who received more than recommended : ');       fprintf('%f \n',ii);
-
-
-%% #########    dose of drugs in the 5 bins      ###############
-
-iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
-vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
-
-%boundaries + median doses for each action
-disp('VASOPRESSORS')
-for i=1:5
-[min(reformat5(vc==i,vcl)) median(reformat5(vc==i,vcl)) max(reformat5(vc==i,vcl))]
-end
-
-disp('IV FLUIDS')
-for i=1:5
-[min(reformat5(io==i,iol)) median(reformat5(io==i,iol)) max(reformat5(io==i,iol))]
-end
+% for i=1:3
+%     ii=qldata(:,17)==i;   %rows in qldata who corresp to this category
+%     j=qldata(ii,14);   %dose
+% 
+% a=[a;    [sum(ii)/numel(ii) mean(qldata(ii,13)) std(qldata(ii,13))./sqrt(sum(ii)) quantile(j,0.25) median(j) quantile(j,0.75)]];
+% end
+% 
+% 
+% % FLUIDS
+% j= abs((qldata(:,9)-qldata(:,11))./(qldata(:,9))).*100;% PCT difference btw given and reco FLUIDS
+% qldata(:,18)=j<=10| abs(qldata(:,15))<=40;   %close dose (40 ml/4h = 10 ml / h)
+% ii=qldata(:,18)==1;   
+% % sum(ii)/numel(ii) % how many received close to optimal dose?
+% qldata(ii,18)=qldata(ii,18)+1;   % category 2 = dose similar
+% ii=qldata(:,18)==0 & qldata(:,15)<0;%less than reco
+% qldata(ii,18)=1;  %cat 1
+% ii=qldata(:,18)==0 & qldata(:,15)>0; %more than reco
+% qldata(ii,18)=3;   % cat 3
+% 
+% 
+% % stats for all 3 categories
+% % a=[];
+% for i=1:3
+%     ii=qldata(:,18)==i;   %rows in qldata who corresp to this category
+%     j=qldata(ii,15)./4;   %dose in ml/h
+% 
+% a=[a;    [sum(ii)/numel(ii) mean(qldata(ii,13)) std(qldata(ii,13))./sqrt(sum(ii)) quantile(j,0.25) median(j) quantile(j,0.75)]];
+% end
+% 
+% i=a(1,1)/(a(1,1)+a(3,1)); ii=a(6,1)/(a(4,1)+a(6,1));
+% a=array2table(a);
+% a=[ array2table({'Vaso: Less than reco', 'Vaso: Similar dose', 'Vaso: More than reco', 'Fluids: Less than reco' ,'Fluids: Similar dose' ,'Fluids: More than reco'}') a];
+% a.Properties.VariableNames={'category','fraction','avg_mortality','SEM','Q1_dose','Q2_dose','Q3_dose'};
+% 
+% disp(a)
+% fprintf(' Among patients who did not receive the recommended dose of vasopressors, fraction of patients who received less than recommended : ');       fprintf('%f \n',i); 
+% fprintf(' Among patients who did not receive the recommended dose of IV fluids, fraction of patients who received more than recommended : ');       fprintf('%f \n',ii);
+% 
+% 
+% %% #########    dose of drugs in the 5 bins      ###############
+% 
+% iol=find(ismember(MIMICtable.Properties.VariableNames,{'input_4hourly'}));
+% vcl=find(ismember(MIMICtable.Properties.VariableNames,{'max_dose_vaso'}));
+% 
+% %boundaries + median doses for each action
+% disp('VASOPRESSORS')
+% for i=1:5
+% [min(reformat5(vc==i,vcl)) median(reformat5(vc==i,vcl)) max(reformat5(vc==i,vcl))]
+% end
+% 
+% disp('IV FLUIDS')
+% for i=1:5
+% [min(reformat5(io==i,iol)) median(reformat5(io==i,iol)) max(reformat5(io==i,iol))]
+% end
 

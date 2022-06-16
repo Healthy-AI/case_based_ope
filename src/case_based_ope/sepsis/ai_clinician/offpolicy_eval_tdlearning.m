@@ -22,8 +22,8 @@ parfor i=1:num_iter
 fprintf('\b|\n');
 
 ii=floor(rand(size(p,1),1)+prop);     % select a random sample of trajectories
-j=ismember(qldata3(:,8),p(ii==1));
-q=qldata3(j==1,1:4);
+jj=ismember(qldata3(:,8),p(ii==1)); %j=ismember(qldata3(:,8),p(ii==1));
+q=qldata3(jj==1,1:4); %q=qldata3(j==1,1:4);
 
 [Qoff, ~]=OffpolicyQlearning150816( q , gamma, 0.1, 300000);
 
