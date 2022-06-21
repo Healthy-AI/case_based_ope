@@ -1,6 +1,6 @@
 # Case-based off-policy evaluation using prototype learning
 
-This repository contains code to run the experiments in the [UAI 2022 paper](https://www.auai.org/uai2022/) _Case-based off-policy evaluation using prototype learning_.
+This repository contains code to run the experiments in the [UAI 2022](https://www.auai.org/uai2022/) paper [_Case-Based Off-Policy Evaluation Using Prototype Learning_](https://openreview.net/forum?id=r3EI6UUiqx9).
 The experiments are defined in `src/cased_based_ope/sepsis` and `src/cased_based_ope/sepsis_sim` and utilize code provided by [Komorowski et al.](https://github.com/matthieukomorowski/AI_Clinician) and [Obserst and Sontag](https://github.com/clinicalml/gumbel-max-scm/tree/master), respectively. All settings for the experiments are defined in `sepsis_config.yml` and `sepsis_sim_config.yml`.
 
 ## Installation
@@ -67,6 +67,18 @@ $ python -m case_based_ope.sepsis.perform_policy_evaluation -c sepsis_config.yml
 To run the code for the simulated sepsis experiment, one must first collect the "true" MDP parameters by executing the notebook `src/case_based_ope/sepsis_sim/gumbel_max_scm/learn_mdp_parameters.ipynb` provided by [Obserst and Sontag](https://github.com/clinicalml/gumbel-max-scm/tree/master). The notebook outputs the file `data/sepsis_sim/diab_txr_mats-replication.pkl`. To run the experiment, then type:
 ```bash
 $ python -m case_based_ope.sepsis_sim.run_experiment -c sepsis_sim_config.yml
+```
+
+## Citation
+
+If you use this work, please cite it as follows:
+```bib
+@inproceedings{matsson2022cbope,
+  title={Case-based off-policy evaluation using prototype learning},
+  author={Matsson, Anton and Johansson, Fredrik Daniel},
+  booktitle={The 38th Conference on Uncertainty in Artificial Intelligence},
+  year={2022}
+}
 ```
 
 ## License
